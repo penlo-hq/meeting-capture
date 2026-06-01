@@ -40,5 +40,8 @@
     }
   }, 5000);
 
-  window.addEventListener('beforeunload', flush);
+  window.addEventListener('beforeunload', () => {
+    flush();
+    chrome.runtime.sendMessage({ type: 'MEETING_END', url: location.href });
+  });
 })();

@@ -19,7 +19,19 @@ async function flushSession(tabId) {
   const cfg = await chrome.storage.sync.get(['penloBaseUrl', 'penloApiKey']);
   if (!cfg.penloBaseUrl || !cfg.penloApiKey) return;
 
-  const endpoint = cfg.penloBaseUrl.replace(/\/$/, '') + '/api/v1/ingest/standup';
+  let endpoint;
+  try {
+    const parsed = new URL(cfg.penloBaseUrl);
+    if (parsed.protocol !== 'https:' && !(parsed.protocol === 'http:' && parsed.hostname === 'localhost')) {
+      chrome.storage.sync.set({ penloConfigError: 'Brain URL must use https://' });
+      return;
+    }
+    endpoint = parsed.origin + '/api/v1/ingest/standup';
+  } catch (_) {
+    chrome.storage.sync.set({ penloConfigError: 'Brain URL is not a valid URL' });
+    return;
+  }
+
   try {
     await fetch(endpoint, {
       method: 'POST',
